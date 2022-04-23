@@ -1,4 +1,15 @@
+import json
 import numpy as np
+
+
+def read_sorted_mapping(path: str) -> list[tuple[float, str]]:
+    with open(path) as f:
+        mapping = json.load(f)
+
+    return sorted(
+        [(brightness, symbol) for symbol, brightness in mapping.items()],
+        key=lambda t: t[0]
+    )
 
 
 def get_symbols(
