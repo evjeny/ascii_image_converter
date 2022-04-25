@@ -6,6 +6,19 @@ from convert import convert_brightness_rgb
 
 
 def generate_tag(
+        ascii_image: list[str]
+) -> str:
+    tag_value = "\n".join(
+        "".join(
+            f"<span>{symbol}</span>"
+            for symbol in ascii_line
+        )
+        for ascii_line in ascii_image
+    )
+    return f"<pre>{tag_value}</pre>"
+
+
+def generate_tag_rgb(
         ascii_image: list[str],
         colors: list[list[tuple[int, int, int]]]
 ) -> str:
@@ -24,8 +37,12 @@ def generate_tag(
     return f"<pre>{tag_value}</pre>"
 
 
-def get_styles(line_height: float = 0.8, background_color: str = "black") -> str:
-    return f"pre {{ line-height: {line_height}; background-color: {background_color};}}"
+def get_styles(
+        line_height: float = 0.8,
+        background_color: str = "black",
+        color: str = "white"
+) -> str:
+    return f"pre {{ line-height: {line_height}; background-color: {background_color}; color: {color}; }}"
 
 
 def convert_folder(folder: str):
@@ -35,11 +52,16 @@ def convert_folder(folder: str):
     ):
         image = Image.open(os.path.join(folder, image_name))
         ascii_image, colors_image = convert_brightness_rgb(image, target_width=64)
-        pre_tag = generate_tag(ascii_image, colors_image)
         styles = get_styles()
+        html_template = "<html><head><style>{styles}</style></head><body>{pre_tag}</body></html>"
 
         with open(os.path.join(folder, f"{image_name}_colors.html"), "w+") as f:
-            f.write(f"<html><head><style>{styles}</style></head><body>{pre_tag}</body></html>")
+            pre_tag = generate_tag_rgb(ascii_image, colors_image)
+            f.write(html_template.format(styles=styles, pre_tag=pre_tag))
+
+        with open(os.path.join(folder, f"{image_name}_wb.html"), "w+") as f:
+            pre_tag = generate_tag(ascii_image)
+            f.write(html_template.format(styles=styles, pre_tag=pre_tag))
 
 
 if __name__ == '__main__':
