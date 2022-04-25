@@ -7,6 +7,22 @@ from PIL import Image
 from brightness_levels import get_symbols, read_sorted_mapping
 
 
+def resize_image(
+        image: Image.Image,
+        target_width: Optional[int] = None,
+        target_height: Optional[int] = None
+) -> Image.Image:
+    width, height = image.size
+    if target_width or target_height:
+        if target_width:
+            target_height = int(height * target_width / width)
+        elif target_height:
+            target_width = int(width * target_height / height)
+
+        return image.resize((target_width, target_height))
+    return image
+
+
 def convert_brightness(
         image: Image.Image,
         sorted_brightness_config: Optional[list[tuple[float, str]]] = None,
@@ -21,14 +37,7 @@ def convert_brightness(
     grayscale_image = Image.new("L", image.size)
     grayscale_image.paste(image, (0, 0))
 
-    width, height = grayscale_image.size
-    if target_width or target_height:
-        if target_width:
-            target_height = int(height * target_width / width)
-        elif target_height:
-            target_width = int(width * target_height / height)
-
-        grayscale_image = grayscale_image.resize((target_width, target_height))
+    grayscale_image = resize_image(grayscale_image, target_width, target_height)
 
     array = np.array(grayscale_image) / 255.0
     height, width = array.shape
@@ -36,6 +45,22 @@ def convert_brightness(
     symbols = get_symbols(array.reshape(-1), sorted_brightness_config)
 
     return [symbols[i * width: (i + 1) * width] for i in range(height)]
+
+
+def convert_brightness_rgb(
+        image: Image.Image,
+        sorted_brightness_config: Optional[list[tuple[float, str]]] = None,
+        target_width: Optional[int] = None,
+        target_height: Optional[int] = None
+) -> tuple[list[str], list[list[tuple[int, int, int]]]]:
+    image = resize_image(image, target_width, target_height)
+    image_ascii = convert_brightness(image, sorted_brightness_config)
+
+    image_rgb = Image.new("RGB", image.size)
+    image_rgb.paste(image)
+    colors = np.array(image_rgb).tolist()
+
+    return image_ascii, colors
 
 
 def convert_folder(folder: str):
