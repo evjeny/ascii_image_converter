@@ -10,6 +10,18 @@ Convert images to ASCII-art!
 python -m pip install -r requirements.txt
 ```
 
+## Run converter script
+
+```bash
+python convert_image.py --help
+
+python convert_image.py \
+  --image images/eva_small.jpg \
+  --output_html eva_small.html \
+  --rgb --target_width 120 \
+  --config precomputed_mappings/arial.json
+```
+
 ## Include into your code
 
 ```python
